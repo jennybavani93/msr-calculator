@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mona's Spice Route POS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: #fff;
+  margin: 0;
+  padding: 8px;
+}
+h1 {
+  text-align: center;
+  color: #f5c542;
+  font-size: 20px;
+  margin: 6px 0;
+}
+h2 {
+  font-size: 14px;
+  margin: 12px 0 4px;
+  border-bottom: 1px solid #444;
+}
+.total-box {
+  background: #000;
+  padding: 8px;
+  text-align: center;
+  font-size: 20px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+.order-box, .cash-box, .day-box {
+  background: #1b1b1b;
+  padding: 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+.cash-row, .day-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.cash-row input {
+  width: 120px;
+  padding: 5px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: none;
+  text-align: right;
+}
+.balance {
+  font-size: 16px;
+  font-weight: bold;
+}
+.menu {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.item {
+  display: flex;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.item-btn {
+  flex: 1;
+  padding: 6px 4px;
+  font-size: 11px;
+  border: none;
+  cursor: pointer;
+}
+.plus-btn, .minus-btn {
+  width: 22px;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  background: #333;
+  color: #fff;
+}
+.food { background: #f5c542; color: #000; }
+.drink { background: #03a9f4; color: #000; }
+.addon { background: #8bc34a; color: #000; }
+.selected { outline: 2px solid #fff; }
+.action {
+  background: #4caf50;
+  color: #000;
+  font-size: 14px;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+.danger {
+  background: #e53935;
+  color: #fff;
+  font-size: 14px;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  width: 100%;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Mona's Spice Route</h1>
+
+<div class="total-box">
+Order Total: RM <span id="total">0.00</span>
+</div>
+
+<div class="order-box" id="orderList">
+<em>No items yet</em>
+</div>
+
+<div class="cash-box">
+  <div class="cash-row">
+    <span>Cash Given (RM)</span>
+    <input type="number" id="cashGiven" placeholder="0.00" oninput="calculateBalance()">
+  </div>
+  <div class="cash-row balance">
+    <span>Balance</span>
+    <span>RM <span id="balance">0.00</span></span>
+  </div>
+</div>
+
+<button class="action" onclick="completeSale()">✅ Complete Sale</button>
+
+<div class="day-box">
+  <div class="day-row">
+    <span>End of Day Total</span>
+    <strong>RM <span id="dayTotal">0.00</span></strong>
+  </div>
+  <button class="danger" onclick="resetDay()">Reset Day</button>
+</div>
+
+<script>
+function item(name, price, label, type="food") {
+  document.write(`
+  <div class="item">
+    <button class="item-btn ${type}" onclick="toggleItem('${name}',${price},this)">${label}</button>
+    <button class="minus-btn" onclick="minusQty(event,'${name}',${price},this)">−</button>
+    <button class="plus-btn" onclick="addQty(event,'${name}',${price},this)">+</button>
+  </div>`);
+}
+</script>
+
+<!-- 1️⃣ ALL DAY MENU -->
+<h2>All Day Menu</h2>
+<div class="menu">
+<script>
+item("Nasi Lemak Kosong",2.8,"NL Kosong");
+item("Nasi Lemak Vege",3.8,"NL Vege");
+item("Nasi Lemak Telur",3.8,"NL Telur");
+item("Mee / Bihun / Kuey",3.0,"Mee/ Bihun/ Kuey");
+item("Thosai",1.8,"Thosai");
+item("Ghee Thosai",2.5,"Ghee Thosai");
+item("Butter Thosai",2.5,"Butter Thosai");
+item("Egg Thosai",2.5,"Egg Thosai");
+item("Rawa Thosai",2.5,"Rawa Thosai");
+item("Idli",0.7,"Idli");
+item("Puri",2.0,"Puri");
+item("Chapati",2.0,"Chapati");
+item("Roti Canai",1.5,"Roti Canai");
+item("Roti Canai Telur",2.4,"Roti Canai Egg");
+item("Paal Appam",2.5,"Paal Appam");
+item("Karuppu Chini Paal Appam",3.0,"KC Paal Appam");
+item("Paniyaram (4pcs)",2.5,"Paniyaram");
+item("Karipap",0.6,"Karipap");</script>
+</div>
+
+<!-- 2️⃣ EVENING TIFFIN -->
+<h2>Evening Tiffin</h2>
+<div class="menu">
+<script>
+item("Mee Goreng Vege",6.0,"Mee Goreng Veg");
+item("Bihun Goreng Vege",6.0,"Bihun Goreng Veg");
+item("Maggi Goreng Vege",6.0,"Maggi Goreng Veg");
+item("Nasi Lemak Goreng",6.5,"NL Goreng");
+</script>
+</div>
+
+<!-- 3️⃣ DRINKS -->
+<h2>Drinks</h2>
+<div class="menu">
+<script>
+item("Teh (Hot)",2.3,"Teh H","drink");
+item("Teh (Cold)",3.0,"Teh C","drink");
+item("Teh O (Hot)",1.8,"Teh O H","drink");
+item("Teh O (Cold)",2.3,"Teh O C","drink");
+item("Teh O Limau (Hot)",2.3,"Teh O Limau H","drink");
+item("Teh O Limau (Cold)",2.8,"Teh O Limau C","drink");
+item("Nescafe (Hot)",2.8,"Nescafe H","drink");
+item("Nescafe (Cold)",3.5,"Nescafe C","drink");
+item("Nescafe O (Hot)",2.3,"Nescafe O H","drink");
+item("Nescafe O (Cold)",3.0,"Nescafe O C","drink");
+item("Kopi (Hot)",2.3,"Kopi H","drink");
+item("Kopi (Cold)",3.0,"Kopi C","drink");
+item("Kopi O",1.8,"Kopi O H","drink");
+item("Kopi O",2.3,"Kopi O C","drink");
+item("Milo (Hot)",2.8,"Milo H","drink");
+item("Milo (Cold)",3.5,"Milo C","drink");
+item("Bru Coffee (Hot)",3.3,"Bru H","drink");
+item("Bru Coffee (Cold)",4.0,"Bru C","drink");
+item("Bru Coffee O (Hot)",3.0,"Bru O H","drink");
+item("Bru Coffee O (Cold)",3.5,"Bru O C","drink");
+item("Limau (Hot)",2.0,"Limau H","drink");
+item("Limau (Cold)",2.5,"Limau C","drink");
+item("Sirap (Hot)",2.0,"Sirap H","drink");
+item("Sirap (Cold)",2.5,"Sirap C","drink");
+item("Sirap Limau (Hot)",2.3,"Sirap Limau H","drink");
+item("Sirap Limau (Cold)",3.0,"Sirap Limau C","drink");
+item("Sirap Bandung (Hot)",2.8,"Bandung H","drink");
+item("Sirap Bandung (Cold)",3.5,"Bandung C","drink");
+item("Coke",3.0,"Coke","drink");
+item("100 Plus",3.0,"100+","drink");
+item("Soya Bean",2.5,"Soya","drink");
+item("Cincau",2.5,"Cincau","drink");
+item("Teh Bunga",2.5,"Bunga","drink");
+</script>
+</div>
+
+<!-- 4️⃣ TAKE AWAY -->
+<h2>Take Away / Add Ons</h2>
+<div class="menu">
+<script>
+item("Add Egg",1.0,"Add Egg","addon");
+item("Take Away Charge",0.3,"Take Away","addon");
+</script>
+</div>
+
+<script>
+let order = {};
+let total = 0;
+let dayTotal = parseFloat(localStorage.getItem("dayTotal")) || 0;
+document.getElementById("dayTotal").innerText = dayTotal.toFixed(2);
+
+function toggleItem(name, price, btn) {
+  if (order[name]) {
+    total -= order[name].qty * price;
+    delete order[name];
+    btn.classList.remove("selected");
+  } else {
+    order[name] = { qty: 1, price };
+    total += price;
+    btn.classList.add("selected");
+  }
+  updateUI();
+}
+
+function addQty(e, name, price, el) {
+  e.stopPropagation();
+  if (!order[name]) {
+    order[name] = { qty: 1, price };
+    el.parentElement.querySelector(".item-btn").classList.add("selected");
+  } else {
+    order[name].qty++;
+  }
+  total += price;
+  updateUI();
+}
+
+function minusQty(e, name, price, el) {
+  e.stopPropagation();
+  if (!order[name]) return;
+  order[name].qty--;
+  total -= price;
+  if (order[name].qty <= 0) {
+    delete order[name];
+    el.parentElement.querySelector(".item-btn").classList.remove("selected");
+  }
+  updateUI();
+}
+
+function updateUI() {
+  document.getElementById("total").innerText = total.toFixed(2);
+  const list = document.getElementById("orderList");
+  list.innerHTML = "";
+  for (let item in order) {
+    const line = order[item].qty * order[item].price;
+    list.innerHTML += `<div class="order-item">
+      <span>${item} x${order[item].qty}</span>
+      <span>RM ${line.toFixed(2)}</span>
+    </div>`;
+  }
+  if (Object.keys(order).length === 0) {
+    list.innerHTML = "<em>No items yet</em>";
+  }
+  calculateBalance();
+}
+
+function calculateBalance() {
+  const cash = parseFloat(document.getElementById("cashGiven").value) || 0;
+  document.getElementById("balance").innerText = (cash - total).toFixed(2);
+}
+
+function completeSale() {
+  if (total <= 0) return;
+  dayTotal += total;
+  localStorage.setItem("dayTotal", dayTotal);
+  document.getElementById("dayTotal").innerText = dayTotal.toFixed(2);
+  clearOrder();
+}
+
+function resetDay() {
+  if (!confirm("Reset end of day total?")) return;
+  dayTotal = 0;
+  localStorage.removeItem("dayTotal");
+  document.getElementById("dayTotal").innerText = "0.00";
+}
+
+function clearOrder() {
+  order = {};
+  total = 0;
+  document.getElementById("cashGiven").value = "";
+  document.getElementById("balance").innerText = "0.00";
+  document.querySelectorAll(".item-btn").forEach(b => b.classList.remove("selected"));
+  updateUI();
+}
+</script>
+
+</body>
+</html>
