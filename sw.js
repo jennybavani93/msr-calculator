@@ -1,4 +1,4 @@
-const CACHE = "msr-pos-v3";
+const CACHE = "msr-pos";
 
 const FILES = [
   "./",
@@ -17,3 +17,4 @@ self.addEventListener("fetch", e => {
     fetch(e.request).catch(() => caches.match(e.request))
   );
 });
+
