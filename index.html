@@ -1,333 +1,527 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Mona's Spice Route POS</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSR POS v3.0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #111;
-  color: #fff;
-  margin: 0;
-  padding: 8px;
-}
-h1 {
-  text-align: center;
-  color: #f5c542;
-  font-size: 20px;
-  margin: 6px 0;
-}
-h2 {
-  font-size: 14px;
-  margin: 12px 0 4px;
-  border-bottom: 1px solid #444;
-}
-.total-box {
-  background: #000;
-  padding: 8px;
-  text-align: center;
-  font-size: 20px;
-  border-radius: 6px;
-  margin-bottom: 6px;
-}
-.order-box, .cash-box, .day-box {
-  background: #1b1b1b;
-  padding: 6px;
-  border-radius: 6px;
-  font-size: 12px;
-  margin-bottom: 8px;
-}
-.order-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 2px;
-}
-.cash-row, .day-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
-.cash-row input {
-  width: 120px;
-  padding: 5px;
-  font-size: 14px;
-  border-radius: 4px;
-  border: none;
-  text-align: right;
-}
-.balance {
-  font-size: 16px;
-  font-weight: bold;
-}
-.menu {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-}
-.item {
-  display: flex;
-  border-radius: 6px;
-  overflow: hidden;
-}
-.item-btn {
-  flex: 1;
-  padding: 6px 4px;
-  font-size: 11px;
-  border: none;
-  cursor: pointer;
-}
-.plus-btn, .minus-btn {
-  width: 22px;
-  font-size: 14px;
-  border: none;
-  cursor: pointer;
-  background: #333;
-  color: #fff;
-}
-.food { background: #f5c542; color: #000; }
-.drink { background: #03a9f4; color: #000; }
-.addon { background: #8bc34a; color: #000; }
-.selected { outline: 2px solid #fff; }
-.action {
-  background: #4caf50;
-  color: #000;
-  font-size: 14px;
-  padding: 10px;
-  border: none;
-  border-radius: 6px;
-  width: 100%;
-  margin-bottom: 6px;
-}
-.danger {
-  background: #e53935;
-  color: #fff;
-  font-size: 14px;
-  padding: 10px;
-  border: none;
-  border-radius: 6px;
-  width: 100%;
-}
+body{font-family:Arial;background:#111;color:#fff;margin:0;padding:8px}
+h1{text-align:center;color:#f5c542;font-size:20px;margin:6px 0}
+h2{font-size:15px;margin:12px 0 4px;border-bottom:1px solid #444}
+
+.box{background:#1b1b1b;padding:6px;border-radius:6px;margin-bottom:8px;font-size:12px}
+.total{background:#000;text-align:center;font-size:20px}
+
+.menu{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+
+.item{display:flex;border-radius:6px;overflow:hidden}
+.item-btn{flex:1;padding:6px 4px;font-size:12px;border:none;cursor:pointer}
+.plus,.minus{width:22px;border:none;background:#333;color:#fff;font-size:14px}
+
+.food{background:#f5c542;color:#000}
+.drink{background:#03a9f4;color:#000}
+.addon{background:#8bc34a;color:#000}
+
+.selected{outline:2px solid #fff}
+
+.row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+
+input{border:none;border-radius:4px;padding:4px;text-align:right}
+
+button{border:none;border-radius:4px;padding:6px 8px;cursor:pointer}
+
+.tabbar button{margin:2px;font-size:12px}
+.active{background:#4caf50;color:#000}
+
+.action{width:100%;background:#4caf50;color:#000;font-size:14px;margin-bottom:6px}
+.action:disabled{opacity:.4}
+
+.danger{width:100%;background:#e53935;color:#fff;font-size:14px}
+
+.order-item{display:flex;justify-content:space-between;gap:6px;margin-bottom:4px}
+.order-item button{padding:2px 6px;font-size:12px}
+
+.small{font-size:11px}
 </style>
 </head>
 
 <body>
 
-<h1>Mona's Spice Route</h1>
+<h1>Mona's Spice Route POS v3.0</h1>
 
-<div class="total-box">
-Order Total: RM <span id="total">0.00</span>
+<div class="box tabbar" id="tabs"></div>
+
+<button class="action" onclick="toggleEditMenu()">⚙ Edit Menu</button>
+
+<div class="box total">
+<span id="tabName"></span> Total : RM <span id="total">0.00</span>
 </div>
 
-<div class="order-box" id="orderList">
-<em>No items yet</em>
+<div class="box" id="orderList"><em>No items yet</em></div>
+
+<div class="box">
+<div class="row">
+<span>Other item (RM)</span>
+<input id="otherAmount" type="number">
+<button onclick="addOther()">Add</button>
+</div>
 </div>
 
-<div class="cash-box">
-  <div class="cash-row">
-    <span>Cash Given (RM)</span>
-    <input type="number" id="cashGiven" placeholder="0.00" oninput="calculateBalance()">
-  </div>
-  <div class="cash-row balance">
-    <span>Balance</span>
-    <span>RM <span id="balance">0.00</span></span>
-  </div>
+<div class="box">
+<div class="row">
+<span>Cash Given (RM)</span>
+<input id="cash" type="number" oninput="onCash()">
+</div>
+<div class="row">
+<b>Balance</b>
+<b>RM <span id="balance">0.00</span></b>
+</div>
 </div>
 
-<button class="action" onclick="completeSale()">✅ Complete Sale</button>
+<button id="completeBtn" class="action" onclick="completeSale()" disabled>
+Complete Sale
+</button>
 
-<div class="day-box">
-  <div class="day-row">
-    <span>End of Day Total</span>
-    <strong>RM <span id="dayTotal">0.00</span></strong>
-  </div>
-  <button class="danger" onclick="resetDay()">Reset Day</button>
-</div>
-
-<script>
-function item(name, price, label, type="food") {
-  document.write(`
-  <div class="item">
-    <button class="item-btn ${type}" onclick="toggleItem('${name}',${price},this)">${label}</button>
-    <button class="minus-btn" onclick="minusQty(event,'${name}',${price},this)">−</button>
-    <button class="plus-btn" onclick="addQty(event,'${name}',${price},this)">+</button>
-  </div>`);
-}
-</script>
-
-<!-- 1️⃣ ALL DAY MENU -->
 <h2>All Day Menu</h2>
-<div class="menu">
-<script>
-item("Nasi Lemak Kosong",2.8,"NL Kosong");
-item("Nasi Lemak Vege",3.8,"NL Vege");
-item("Nasi Lemak Telur",3.8,"NL Telur");
-item("Mee / Bihun / Kuey",3.0,"Mee/ Bihun/ Kuey");
-item("Thosai",1.8,"Thosai");
-item("Ghee Thosai",2.5,"Ghee Thosai");
-item("Butter Thosai",2.5,"Butter Thosai");
-item("Egg Thosai",2.5,"Egg Thosai");
-item("Rawa Thosai",2.5,"Rawa Thosai");
-item("Idli",0.7,"Idli");
-item("Puri",2.0,"Puri");
-item("Chapati",2.0,"Chapati");
-item("Roti Canai",1.5,"Roti Canai");
-item("Roti Canai Telur",2.4,"Roti Canai Egg");
-item("Paal Appam",2.5,"Paal Appam");
-item("Karuppu Chini Paal Appam",3.0,"KC Paal Appam");
-item("Paniyaram (4pcs)",2.5,"Paniyaram");
-item("Karipap",0.6,"Karipap");</script>
-</div>
+<div class="menu" id="menu-All Day Menu"></div>
 
-<!-- 2️⃣ EVENING TIFFIN -->
 <h2>Evening Tiffin</h2>
-<div class="menu">
-<script>
-item("Mee Goreng Vege",6.0,"Mee Goreng Veg");
-item("Bihun Goreng Vege",6.0,"Bihun Goreng Veg");
-item("Maggi Goreng Vege",6.0,"Maggi Goreng Veg");
-item("Nasi Lemak Goreng",6.5,"NL Goreng");
-</script>
-</div>
+<div class="menu" id="menu-Evening Tiffin"></div>
 
-<!-- 3️⃣ DRINKS -->
 <h2>Drinks</h2>
-<div class="menu">
-<script>
-item("Teh (Hot)",2.3,"Teh H","drink");
-item("Teh (Cold)",3.0,"Teh C","drink");
-item("Teh O (Hot)",1.8,"Teh O H","drink");
-item("Teh O (Cold)",2.3,"Teh O C","drink");
-item("Teh O Limau (Hot)",2.3,"Teh O Limau H","drink");
-item("Teh O Limau (Cold)",2.8,"Teh O Limau C","drink");
-item("Nescafe (Hot)",2.8,"Nescafe H","drink");
-item("Nescafe (Cold)",3.5,"Nescafe C","drink");
-item("Nescafe O (Hot)",2.3,"Nescafe O H","drink");
-item("Nescafe O (Cold)",3.0,"Nescafe O C","drink");
-item("Kopi (Hot)",2.3,"Kopi H","drink");
-item("Kopi (Cold)",3.0,"Kopi C","drink");
-item("Kopi O",1.8,"Kopi O H","drink");
-item("Kopi O",2.3,"Kopi O C","drink");
-item("Milo (Hot)",2.8,"Milo H","drink");
-item("Milo (Cold)",3.5,"Milo C","drink");
-item("Bru Coffee (Hot)",3.3,"Bru H","drink");
-item("Bru Coffee (Cold)",4.0,"Bru C","drink");
-item("Bru Coffee O (Hot)",3.0,"Bru O H","drink");
-item("Bru Coffee O (Cold)",3.5,"Bru O C","drink");
-item("Limau (Hot)",2.0,"Limau H","drink");
-item("Limau (Cold)",2.5,"Limau C","drink");
-item("Sirap (Hot)",2.0,"Sirap H","drink");
-item("Sirap (Cold)",2.5,"Sirap C","drink");
-item("Sirap Limau (Hot)",2.3,"Sirap Limau H","drink");
-item("Sirap Limau (Cold)",3.0,"Sirap Limau C","drink");
-item("Sirap Bandung (Hot)",2.8,"Bandung H","drink");
-item("Sirap Bandung (Cold)",3.5,"Bandung C","drink");
-item("Coke",3.0,"Coke","drink");
-item("100 Plus",3.0,"100+","drink");
-item("Soya Bean",2.5,"Soya","drink");
-item("Cincau",2.5,"Cincau","drink");
-item("Teh Bunga",2.5,"Bunga","drink");
-</script>
-</div>
+<div class="menu" id="menu-Drinks"></div>
 
-<!-- 4️⃣ TAKE AWAY -->
 <h2>Take Away / Add Ons</h2>
-<div class="menu">
-<script>
-item("Add Egg",1.0,"Add Egg","addon");
-item("Take Away Charge",0.3,"Take Away","addon");
-</script>
+<div class="menu" id="menu-Take Away / Add Ons"></div>
+
+<div class="box">
+<div class="row">
+<span>End of Day Total</span>
+<b>RM <span id="dayTotal">0.00</span></b>
+</div>
+<button class="danger" onclick="resetDay()">Reset Day</button>
 </div>
 
 <script>
-let order = {};
-let total = 0;
-let dayTotal = parseFloat(localStorage.getItem("dayTotal")) || 0;
-document.getElementById("dayTotal").innerText = dayTotal.toFixed(2);
+/* ---------------- PIN ---------------- */
 
-function toggleItem(name, price, btn) {
-  if (order[name]) {
-    total -= order[name].qty * price;
-    delete order[name];
-    btn.classList.remove("selected");
-  } else {
-    order[name] = { qty: 1, price };
-    total += price;
-    btn.classList.add("selected");
-  }
-  updateUI();
+const EDIT_PIN = "1234";
+let editMode = false;
+
+/* ---------------- MENU DATA ---------------- */
+
+let menuData = JSON.parse(localStorage.getItem("menuData")) || {
+
+"All Day Menu": [
+  { name:"Nasi Lemak Kosong", label:"NL Kosong", price:2.8, type:"food" },
+  { name:"Nasi Lemak Vege", label:"NL Vege", price:3.8, type:"food" },
+  { name:"Nasi Lemak Telur", label:"NL Telur", price:3.8, type:"food" },
+  { name:"Mee / Bihun / Kuey", label:"Mee / Bihun / Kuey", price:3.0, type:"food" },
+  { name:"Thosai", label:"Thosai", price:1.8, type:"food" },
+  { name:"Ghee Thosai", label:"Ghee Thosai", price:2.5, type:"food" },
+  { name:"Butter Thosai", label:"Butter Thosai", price:2.5, type:"food" },
+  { name:"Egg Thosai", label:"Egg Thosai", price:2.5, type:"food" },
+  { name:"Rawa Thosai", label:"Rawa Thosai", price:2.5, type:"food" },
+  { name:"Idli", label:"Idli", price:0.7, type:"food" },
+  { name:"Puri", label:"Puri", price:2.0, type:"food" },
+  { name:"Chapati", label:"Chapati", price:2.0, type:"food" },
+  { name:"Roti Canai", label:"Roti Canai", price:1.5, type:"food" },
+  { name:"Roti Canai Telur", label:"Roti Canai Egg", price:2.4, type:"food" },
+  { name:"Paal Appam", label:"Paal Appam", price:2.5, type:"food" },
+  { name:"Karuppu Chini Paal Appam", label:"KC Paal Appam", price:3.0, type:"food" },
+  { name:"Paniyaram (4pcs)", label:"Paniyaram", price:2.5, type:"food" },
+  { name:"Karipap", label:"Karipap", price:0.6, type:"food" }
+],
+
+"Evening Tiffin": [
+  { name:"Mee Goreng Biasa", label:"Mee Goreng Biasa", price:7.0, type:"food" },
+  { name:"Mee Goreng Vege", label:"Mee Goreng Veg", price:6.0, type:"food" },
+
+  { name:"Bihun Goreng Biasa", label:"Bihun Goreng Biasa", price:7.0, type:"food" },
+  { name:"Bihun Goreng Vege", label:"Bihun Goreng Veg", price:6.0, type:"food" },
+
+  { name:"Maggi Goreng Biasa", label:"Maggi Goreng Biasa", price:7.0, type:"food" },
+  { name:"Maggi Goreng Vege", label:"Maggi Goreng Veg", price:6.0, type:"food" },
+
+  { name:"Nasi Goreng Biasa", label:"Nasi Goreng Biasa", price:7.5, type:"food" },
+  { name:"Nasi Goreng Veg", label:"Nasi Goreng Veg", price:6.5, type:"food" },
+
+  { name:"Nasi Lemak Goreng", label:"NL Goreng", price:6.5, type:"food" }
+],
+
+"Drinks": [
+
+  { name:"Teh (Hot)", label:"Teh H", price:2.3, type:"drink" },
+  { name:"Teh (Cold)", label:"Teh C", price:3.0, type:"drink" },
+
+  { name:"Teh Halia (Hot)", label:"Teh Halia H", price:3.3, type:"drink" },
+
+  { name:"Teh O (Hot)", label:"Teh O H", price:1.8, type:"drink" },
+  { name:"Teh O (Cold)", label:"Teh O C", price:2.3, type:"drink" },
+
+  { name:"Teh O Halia (Hot)", label:"Teh O Halia H", price:2.8, type:"drink" },
+
+  { name:"Teh O Limau (Hot)", label:"Teh O Limau H", price:2.3, type:"drink" },
+  { name:"Teh O Limau (Cold)", label:"Teh O Limau C", price:2.8, type:"drink" },
+
+  { name:"Nescafe (Hot)", label:"Nescafe H", price:2.8, type:"drink" },
+  { name:"Nescafe (Cold)", label:"Nescafe C", price:3.5, type:"drink" },
+
+  { name:"Nescafe O (Hot)", label:"Nescafe O H", price:2.3, type:"drink" },
+  { name:"Nescafe O (Cold)", label:"Nescafe O C", price:3.0, type:"drink" },
+
+  { name:"Kopi (Hot)", label:"Kopi H", price:2.3, type:"drink" },
+  { name:"Kopi (Cold)", label:"Kopi C", price:3.0, type:"drink" },
+
+  { name:"Kopi O (Hot)", label:"Kopi O H", price:1.8, type:"drink" },
+  { name:"Kopi O (Cold)", label:"Kopi O C", price:2.3, type:"drink" },
+
+  { name:"Milo (Hot)", label:"Milo H", price:2.8, type:"drink" },
+  { name:"Milo (Cold)", label:"Milo C", price:3.5, type:"drink" },
+
+  { name:"Bru Coffee (Hot)", label:"Bru H", price:3.3, type:"drink" },
+  { name:"Bru Coffee (Cold)", label:"Bru C", price:4.0, type:"drink" },
+
+  { name:"Bru Coffee O (Hot)", label:"Bru O H", price:3.0, type:"drink" },
+  { name:"Bru Coffee O (Cold)", label:"Bru O C", price:3.5, type:"drink" },
+
+  { name:"Limau (Hot)", label:"Limau H", price:2.0, type:"drink" },
+  { name:"Limau (Cold)", label:"Limau C", price:2.5, type:"drink" },
+
+  { name:"Sirap (Hot)", label:"Sirap H", price:2.0, type:"drink" },
+  { name:"Sirap (Cold)", label:"Sirap C", price:2.5, type:"drink" },
+
+  { name:"Sirap Limau (Hot)", label:"Sirap Limau H", price:2.3, type:"drink" },
+  { name:"Sirap Limau (Cold)", label:"Sirap Limau C", price:3.0, type:"drink" },
+
+  { name:"Sirap Bandung (Hot)", label:"Bandung H", price:2.8, type:"drink" },
+  { name:"Sirap Bandung (Cold)", label:"Bandung C", price:3.5, type:"drink" },
+
+  { name:"Coke", label:"Coke", price:3.0, type:"drink" },
+  { name:"100 Plus", label:"100+", price:3.0, type:"drink" },
+
+  { name:"Soya Bean", label:"Soya", price:2.5, type:"drink" },
+  { name:"Cincau", label:"Cincau", price:2.5, type:"drink" },
+
+  { name:"Teh Bunga", label:"Teh Bunga", price:2.5, type:"drink" }
+
+],
+
+"Take Away / Add Ons":[
+{name:"Add Egg",label:"Add Egg",price:1.0,type:"addon"},
+{name:"Take Away Charge",label:"Take Away",price:0.3,type:"addon"}
+]
+
+};
+
+function saveMenu(){
+localStorage.setItem("menuData",JSON.stringify(menuData));
 }
 
-function addQty(e, name, price, el) {
-  e.stopPropagation();
-  if (!order[name]) {
-    order[name] = { qty: 1, price };
-    el.parentElement.querySelector(".item-btn").classList.add("selected");
-  } else {
-    order[name].qty++;
-  }
-  total += price;
-  updateUI();
+/* ---------------- TABS ---------------- */
+
+const TABLES=6, TAKEAWAYS=3;
+let tabs=[],current=0;
+
+function newTab(){return{order:{},total:0,cash:""}}
+
+for(let i=1;i<=TABLES;i++)tabs.push({name:"Table "+i,data:newTab()});
+for(let i=1;i<=TAKEAWAYS;i++)tabs.push({name:"Take Away "+i,data:newTab()});
+
+/* ---------------- DAY TOTAL ---------------- */
+
+let dayTotal=parseFloat(localStorage.getItem("dayTotal"))||0;
+document.getElementById("dayTotal").innerText=dayTotal.toFixed(2);
+
+/* ---------------- UI ---------------- */
+
+function drawTabs(){
+const t=document.getElementById("tabs");t.innerHTML="";
+tabs.forEach((x,i)=>{
+let b=document.createElement("button");
+b.textContent=x.name;
+if(i===current)b.classList.add("active");
+b.onclick=()=>switchTab(i);
+t.appendChild(b);
+});
+document.getElementById("tabName").innerText=tabs[current].name;
 }
 
-function minusQty(e, name, price, el) {
-  e.stopPropagation();
-  if (!order[name]) return;
-  order[name].qty--;
-  total -= price;
-  if (order[name].qty <= 0) {
-    delete order[name];
-    el.parentElement.querySelector(".item-btn").classList.remove("selected");
-  }
-  updateUI();
+function tab(){return tabs[current].data;}
+
+function switchTab(i){
+saveCash();
+current=i;
+drawTabs();
+restoreSelections();
+updateUI();
+restoreCash();
 }
 
-function updateUI() {
-  document.getElementById("total").innerText = total.toFixed(2);
-  const list = document.getElementById("orderList");
-  list.innerHTML = "";
-  for (let item in order) {
-    const line = order[item].qty * order[item].price;
-    list.innerHTML += `<div class="order-item">
-      <span>${item} x${order[item].qty}</span>
-      <span>RM ${line.toFixed(2)}</span>
-    </div>`;
-  }
-  if (Object.keys(order).length === 0) {
-    list.innerHTML = "<em>No items yet</em>";
-  }
-  calculateBalance();
+drawTabs();
+
+/* ---------------- ORDER ---------------- */
+
+function toggleItem(name,price,btn){
+let t=tab();
+if(t.order[name]){
+t.total-=t.order[name].qty*price;
+delete t.order[name];
+btn.classList.remove("selected");
+}else{
+t.order[name]={qty:1,price,label:name};
+t.total+=price;
+btn.classList.add("selected");
+}
+updateUI();
 }
 
-function calculateBalance() {
-  const cash = parseFloat(document.getElementById("cashGiven").value) || 0;
-  document.getElementById("balance").innerText = (cash - total).toFixed(2);
+function addQty(e,name,price){
+e.stopPropagation();
+let t=tab();
+if(!t.order[name])t.order[name]={qty:0,price,label:name};
+t.order[name].qty++;
+t.total+=price;
+mark(name,true);
+updateUI();
 }
 
-function completeSale() {
-  if (total <= 0) return;
-  dayTotal += total;
-  localStorage.setItem("dayTotal", dayTotal);
-  document.getElementById("dayTotal").innerText = dayTotal.toFixed(2);
-  clearOrder();
+function minusQty(e,name,price){
+e.stopPropagation();
+let t=tab();
+if(!t.order[name])return;
+t.order[name].qty--;
+t.total-=price;
+if(t.order[name].qty<=0){
+delete t.order[name];
+mark(name,false);
+}
+updateUI();
 }
 
-function resetDay() {
-  if (!confirm("Reset end of day total?")) return;
-  dayTotal = 0;
-  localStorage.removeItem("dayTotal");
-  document.getElementById("dayTotal").innerText = "0.00";
+/* ---------------- OTHER ---------------- */
+
+function addOther(){
+let v=parseFloat(otherAmount.value);
+if(!(v>0))return;
+let id="OTHER-"+Date.now();
+let t=tab();
+t.order[id]={qty:1,price:v,label:"Other item"};
+t.total+=v;
+otherAmount.value="";
+updateUI();
 }
 
-function clearOrder() {
-  order = {};
-  total = 0;
-  document.getElementById("cashGiven").value = "";
-  document.getElementById("balance").innerText = "0.00";
-  document.querySelectorAll(".item-btn").forEach(b => b.classList.remove("selected"));
-  updateUI();
+/* ---------------- ORDER LIST ---------------- */
+
+function minusFromList(id){
+let t=tab();
+if(!t.order[id])return;
+t.order[id].qty--;
+t.total-=t.order[id].price;
+if(t.order[id].qty<=0){
+delete t.order[id];
+if(!id.startsWith("OTHER-"))mark(id,false);
+}
+updateUI();
+}
+
+function removeFromList(id){
+let t=tab();
+if(!t.order[id])return;
+t.total-=t.order[id].qty*t.order[id].price;
+delete t.order[id];
+if(!id.startsWith("OTHER-"))mark(id,false);
+updateUI();
+}
+
+/* ---------------- CASH ---------------- */
+
+function onCash(){
+calcBalance();
+completeBtn.disabled=!(parseFloat(cash.value)>0);
+}
+
+function calcBalance(){
+let t=tab();
+let c=parseFloat(cash.value)||0;
+balance.innerText=(c-t.total).toFixed(2);
+}
+
+function saveCash(){tab().cash=cash.value;}
+function restoreCash(){cash.value=tab().cash||"";onCash();}
+
+/* ---------------- COMPLETE ---------------- */
+
+function completeSale(){
+let t=tab();
+let c=parseFloat(cash.value);
+if(!(c>0)||t.total<=0)return;
+
+dayTotal+=t.total;
+localStorage.setItem("dayTotal",dayTotal);
+dayTotalSpan.innerText=dayTotal.toFixed(2);
+
+tabs[current].data=newTab();
+restoreSelections();
+restoreCash();
+updateUI();
+}
+
+const dayTotalSpan=document.getElementById("dayTotal");
+
+/* ---------------- RESET DAY ---------------- */
+
+function resetDay(){
+if(!confirm("Reset day total?"))return;
+dayTotal=0;
+localStorage.removeItem("dayTotal");
+dayTotalSpan.innerText="0.00";
+}
+
+/* ---------------- RENDER ORDER ---------------- */
+
+function updateUI(){
+let t=tab();
+total.innerText=t.total.toFixed(2);
+orderList.innerHTML="";
+
+for(let id in t.order){
+let l=t.order[id];
+let line=l.qty*l.price;
+orderList.innerHTML+=`
+<div class="order-item">
+<span>${l.label} x${l.qty}</span>
+<div>
+<button onclick="minusFromList('${id}')">−</button>
+<button onclick="removeFromList('${id}')">✕</button>
+<span> RM ${line.toFixed(2)}</span>
+</div>
+</div>`;
+}
+
+if(!Object.keys(t.order).length)
+orderList.innerHTML="<em>No items yet</em>";
+
+calcBalance();
+}
+
+/* ---------------- MENU RENDER ---------------- */
+
+function renderMenus(){
+
+for(let section in menuData){
+
+let box=document.getElementById("menu-"+section);
+box.innerHTML="";
+
+menuData[section].forEach((m,idx)=>{
+
+box.innerHTML+=`
+<div class="item">
+<button class="item-btn ${m.type}" data-name="${m.name}"
+onclick="toggleItem('${m.name}',${m.price},this)">
+${m.label}<br>RM ${m.price.toFixed(2)}
+</button>
+<button class="minus" onclick="minusQty(event,'${m.name}',${m.price})">−</button>
+<button class="plus" onclick="addQty(event,'${m.name}',${m.price})">+</button>
+</div>
+`;
+
+if(editMode){
+box.innerHTML+=`
+<div class="small" style="grid-column:span 3">
+Price:
+<input type="number" value="${m.price}"
+onchange="editPrice('${section}',${idx},this.value)">
+<button onclick="deleteItem('${section}',${idx})">Delete</button>
+</div>`;
+}
+
+});
+
+if(editMode){
+box.innerHTML+=`
+<div style="grid-column:span 3" class="small">
+<input id="n1-${section}" placeholder="Name">
+<input id="n2-${section}" placeholder="Label">
+<input id="n3-${section}" type="number" placeholder="Price">
+<button onclick="addItem('${section}')">Add</button>
+</div>`;
+}
+
+}
+
+restoreSelections();
+}
+
+/* ---------------- MENU EDIT ---------------- */
+
+function toggleEditMenu(){
+
+if(!editMode){
+let p=prompt("Enter PIN");
+if(p!==EDIT_PIN)return alert("Wrong PIN");
+}
+
+editMode=!editMode;
+renderMenus();
+}
+
+function editPrice(section,idx,val){
+menuData[section][idx].price=parseFloat(val)||0;
+saveMenu();
+renderMenus();
+}
+
+function deleteItem(section,idx){
+if(!confirm("Delete item?"))return;
+menuData[section].splice(idx,1);
+saveMenu();
+renderMenus();
+}
+
+function addItem(section){
+let n=document.getElementById("n1-"+section).value;
+let l=document.getElementById("n2-"+section).value;
+let p=parseFloat(document.getElementById("n3-"+section).value);
+if(!n||!l||!(p>0))return;
+
+menuData[section].push({
+name:n,label:l,price:p,
+type:section==="Drinks"?"drink":section==="Take Away / Add Ons"?"addon":"food"
+});
+saveMenu();
+renderMenus();
+}
+
+/* ---------------- SELECTION ---------------- */
+
+function mark(name,on){
+document.querySelectorAll('.item-btn[data-name="'+name+'"]')
+.forEach(b=>on?b.classList.add("selected"):b.classList.remove("selected"));
+}
+
+function restoreSelections(){
+document.querySelectorAll(".item-btn").forEach(b=>b.classList.remove("selected"));
+let t=tab();
+for(let id in t.order){
+if(!id.startsWith("OTHER-"))mark(id,true);
+}
+}
+
+/* ---------------- INIT ---------------- */
+
+renderMenus();
+restoreSelections();
+updateUI();
+restoreCash();
+</script>
+
+<script>
+if("serviceWorker" in navigator){
+window.addEventListener("load",()=>{navigator.serviceWorker.register("./sw.js");});
 }
 </script>
 
