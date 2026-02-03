@@ -4,7 +4,40 @@
 <meta charset="UTF-8">
 <title>MSR POS v3.0</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
+<script>
+const firebaseConfig = {
+ // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyB8PgmBscFjmyPEursRcEK2Nfw-ulPWY6A",
+  authDomain: "msr-pos.firebaseapp.com",
+  databaseURL: "https://msr-pos-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "msr-pos",
+  storageBucket: "msr-pos.firebasestorage.app",
+  messagingSenderId: "984323905404",
+  appId: "1:984323905404:web:92974e34cd90c35e3df6f9"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.database();
+const menuRef = db.ref("menuData");
+const salesRef = db.ref("sales");
+const dayTotalRef = db.ref("dayTotal");
+
+</script>
+  
 <style>
 body{font-family:Arial;background:#111;color:#fff;margin:0;padding:8px}
 h1{text-align:center;color:#f5c542;font-size:20px;margin:6px 0}
@@ -527,3 +560,4 @@ window.addEventListener("load",()=>{navigator.serviceWorker.register("./sw.js");
 
 </body>
 </html>
+
